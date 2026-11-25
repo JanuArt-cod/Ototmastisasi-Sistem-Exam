@@ -7,6 +7,7 @@ use App\Http\Controllers\ExamInformationController;
 use App\Http\Controllers\ExamRoomController;
 use App\Http\Controllers\ExamScheduleController;
 use App\Http\Controllers\ExamSessionController;
+use App\Http\Controllers\ScheduleShareController;
 use App\Http\Controllers\SeatingFloorPlanController;
 use App\Http\Controllers\SeatingPdfController;
 use App\Http\Controllers\SeatingPlanController;
@@ -49,6 +50,12 @@ Route::prefix('/sessions/{examSession}/schedules')->name('exam-sessions.schedule
     Route::post('/sample', [ExamScheduleController::class, 'seedSample'])->name('seed-sample');
     Route::delete('/{schedule}', [ExamScheduleController::class, 'destroy'])->name('destroy');
     Route::post('/clear', [ExamScheduleController::class, 'clear'])->name('clear');
+
+    Route::get('/share', [ScheduleShareController::class, 'index'])->name('share.index');
+    Route::post('/share', [ScheduleShareController::class, 'update'])->name('share.update');
+    Route::post('/share/auto-assign', [ScheduleShareController::class, 'autoAssign'])->name('share.auto-assign');
+    Route::post('/share/reset', [ScheduleShareController::class, 'reset'])->name('share.reset');
+    Route::get('/share/pdf', [ScheduleShareController::class, 'exportPdf'])->name('share.pdf');
 });
 
 Route::prefix('/sessions/{examSession}/information')->name('exam-sessions.information.')->group(function () {

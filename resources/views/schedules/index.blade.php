@@ -13,6 +13,10 @@
                 </p>
             </div>
             <div class="actions-group">
+
+                <a href="{{ route('exam-sessions.schedules.share.index', $session) }}" class="btn btn-primary">
+                    Cetak &amp; Share Jadwal (WA)
+                </a>
                 <a href="{{ route('exam-sessions.design.edit', $session) }}" class="btn btn-secondary">
                     Desain Kartu &amp; Cetak
                 </a>

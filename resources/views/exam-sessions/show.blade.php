@@ -36,6 +36,9 @@
                 <a href="{{ route('exam-sessions.schedules.index', $session) }}" class="btn btn-secondary">
                     Jadwal Ujian (Sisi Belakang)
                 </a>
+                <a href="{{ route('exam-sessions.schedules.share.index', $session) }}" class="btn btn-secondary">
+                    Cetak Jadwal &amp; Pengawas (WA)
+                </a>
                 <a href="{{ route('exam-sessions.design.edit', $session) }}" class="btn btn-secondary">
                     Desain Kartu &amp; Cetak
                 </a>
@@ -175,6 +178,16 @@
                     <td>
                         <a href="{{ route('exam-sessions.attendance.index', $session) }}" class="btn btn-secondary btn-sm">
                             Buka Daftar Hadir
+                        </a>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Tambahan</strong></td>
+                    <td><strong>Cetak Jadwal &amp; Pengawas (Share WA)</strong></td>
+                    <td>Atur pengawas ruang &amp; panitia harian, unduh gambar PNG/PDF jadwal resmi, atau salin teks pengumuman grup WhatsApp.</td>
+                    <td>
+                        <a href="{{ route('exam-sessions.schedules.share.index', $session) }}" class="btn btn-secondary btn-sm">
+                            Buka Jadwal WA
                         </a>
                     </td>
                 </tr>
