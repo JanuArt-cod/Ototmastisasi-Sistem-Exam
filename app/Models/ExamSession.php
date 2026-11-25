@@ -51,4 +51,10 @@ class ExamSession extends Model
             ->orderBy('sort_order')
             ->orderBy('id');
     }
+
+    public function seatingPlans(): HasMany
+    {
+        return $this->hasMany(SeatingPlan::class)
+            ->orderByDesc('version_number');
+    }
 }

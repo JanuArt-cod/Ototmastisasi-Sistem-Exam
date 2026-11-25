@@ -6,6 +6,9 @@ use App\Http\Controllers\ExamInformationController;
 use App\Http\Controllers\ExamRoomController;
 use App\Http\Controllers\ExamScheduleController;
 use App\Http\Controllers\ExamSessionController;
+use App\Http\Controllers\SeatingFloorPlanController;
+use App\Http\Controllers\SeatingPdfController;
+use App\Http\Controllers\SeatingPlanController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\StudentImportController;
 use Illuminate\Support\Facades\Route;
@@ -64,4 +67,14 @@ Route::prefix('/sessions/{examSession}/export')->name('exam-sessions.export.')->
     Route::post('/batch', [CardExportController::class, 'exportBatch'])->name('batch');
     Route::get('/files/{filename}', [CardExportController::class, 'downloadFile'])->name('download');
     Route::delete('/files/{filename}', [CardExportController::class, 'deleteFile'])->name('delete');
+});
+
+Route::prefix('/sessions/{examSession}/seating')->name('exam-sessions.seating.')->group(function () {
+    Route::get('/', [SeatingPlanController::class, 'index'])->name('index');
+    Route::post('/generate', [SeatingPlanController::class, 'generate'])->name('generate');
+    Route::post('/{seatingPlan}/finalize', [SeatingPlanController::class, 'finalize'])->name('finalize');
+    Route::patch('/qr-url', [SeatingPdfController::class, 'saveQrUrl'])->name('qr-url');
+    Route::get('/{seatingPlan}/floor-plan', [SeatingFloorPlanController::class, 'show'])->name('floor-plan');
+    Route::get('/{seatingPlan}/floor-plan/export-html', [SeatingFloorPlanController::class, 'exportHtml'])->name('floor-plan.export-html');
+    Route::get('/{seatingPlan}/pdf', [SeatingPdfController::class, 'export'])->name('pdf');
 });

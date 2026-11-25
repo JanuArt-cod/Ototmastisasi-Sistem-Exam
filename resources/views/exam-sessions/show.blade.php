@@ -24,6 +24,9 @@
                 <a href="{{ route('exam-sessions.rooms.index', $session) }}" class="btn btn-secondary">
                     Pengaturan Ruang Ujian
                 </a>
+                <a href="{{ route('exam-sessions.seating.index', $session) }}" class="btn btn-secondary">
+                    Nomor Meja Peserta
+                </a>
                 <a href="{{ route('exam-sessions.information.edit', $session) }}" class="btn btn-secondary">
                     Informasi Sekolah &amp; Ujian
                 </a>
@@ -149,6 +152,16 @@
                     <td>
                         <a href="{{ route('exam-sessions.export.index', $session) }}" class="btn btn-primary btn-sm">
                             Buka Ekspor PDF
+                        </a>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Tambahan</strong></td>
+                    <td><strong>Nomor Meja Peserta &amp; Denah Duduk</strong></td>
+                    <td>Acak pasangan peserta lintas tingkat kelas dalam satu meja, lihat denah duduk, dan cetak kartu nomor meja.</td>
+                    <td>
+                        <a href="{{ route('exam-sessions.seating.index', $session) }}" class="btn btn-secondary btn-sm">
+                            Buka Nomor Meja
                         </a>
                     </td>
                 </tr>
