@@ -27,6 +27,9 @@
                 <a href="{{ route('exam-sessions.seating.index', $session) }}" class="btn btn-secondary">
                     Nomor Meja Peserta
                 </a>
+                <a href="{{ route('exam-sessions.attendance.index', $session) }}" class="btn btn-secondary">
+                    Daftar Hadir Peserta
+                </a>
                 <a href="{{ route('exam-sessions.information.edit', $session) }}" class="btn btn-secondary">
                     Informasi Sekolah &amp; Ujian
                 </a>
@@ -162,6 +165,16 @@
                     <td>
                         <a href="{{ route('exam-sessions.seating.index', $session) }}" class="btn btn-secondary btn-sm">
                             Buka Nomor Meja
+                        </a>
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>Tambahan</strong></td>
+                    <td><strong>Daftar Hadir Peserta</strong></td>
+                    <td>Pratinjau dan cetak lembar daftar hadir paraf manual peserta per ruang ujian berdasarkan jadwal mata pelajaran.</td>
+                    <td>
+                        <a href="{{ route('exam-sessions.attendance.index', $session) }}" class="btn btn-secondary btn-sm">
+                            Buka Daftar Hadir
                         </a>
                     </td>
                 </tr>

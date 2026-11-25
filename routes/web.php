@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AttendanceSheetController;
 use App\Http\Controllers\CardDesignController;
 use App\Http\Controllers\CardExportController;
 use App\Http\Controllers\ExamInformationController;
@@ -77,4 +78,9 @@ Route::prefix('/sessions/{examSession}/seating')->name('exam-sessions.seating.')
     Route::get('/{seatingPlan}/floor-plan', [SeatingFloorPlanController::class, 'show'])->name('floor-plan');
     Route::get('/{seatingPlan}/floor-plan/export-html', [SeatingFloorPlanController::class, 'exportHtml'])->name('floor-plan.export-html');
     Route::get('/{seatingPlan}/pdf', [SeatingPdfController::class, 'export'])->name('pdf');
+});
+
+Route::prefix('/sessions/{examSession}/attendance')->name('exam-sessions.attendance.')->group(function () {
+    Route::get('/', [AttendanceSheetController::class, 'index'])->name('index');
+    Route::get('/pdf', [AttendanceSheetController::class, 'exportPdf'])->name('pdf');
 });
