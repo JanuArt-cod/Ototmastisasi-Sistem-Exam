@@ -184,6 +184,15 @@
         font-weight: 700;
         color: #000;
     }
+    .paper-system-footer {
+        margin-top: 12px;
+        padding-top: 6px;
+        border-top: 1px dashed #94a3b8;
+        text-align: left;
+        font-size: 9.5px;
+        font-style: italic;
+        color: #475569;
+    }
 </style>
 
 <div class="page-header" style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px;">
@@ -364,6 +373,9 @@
                         @if ($options['footer_signatory'] !== '')
                             <div class="paper-footer">{{ $options['footer_signatory'] }}</div>
                         @endif
+                        <div class="paper-system-footer">
+                            Jadwal Pelajaran di cetak oleh Apps-Automated Examination Document System
+                        </div>
                     </div>
                 </div>
             </div>

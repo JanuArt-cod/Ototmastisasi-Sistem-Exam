@@ -134,6 +134,23 @@
             font-weight: bold;
             page-break-inside: avoid;
         }
+        .footer-sign {
+         margin-top: 8pt;
+         text-align: right;
+         font-size: 8.2pt;
+         font-weight: bold;
+         page-break-inside: avoid;
+     }
+     .system-print-footer {
+         margin-top: 10pt;
+         padding-top: 4pt;
+         border-top: 0.5pt dashed #64748b;
+         text-align: left;
+         font-size: 6.8pt;
+         font-style: italic;
+         color: #334155;
+         page-break-inside: avoid;
+     }
     </style>
 </head>
 <body>
@@ -298,5 +315,9 @@
     @if ($options['footer_signatory'] !== '')
         <div class="footer-sign">{{ $options['footer_signatory'] }}</div>
     @endif
+
+    <div class="system-print-footer">
+        *Dokumen ini di cetak secara otomatis Apps-Automated Examination Document System
+    </div>
 </body>
 </html>
