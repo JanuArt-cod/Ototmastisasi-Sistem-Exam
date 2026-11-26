@@ -370,11 +370,27 @@
                             </tbody>
                         </table>
 
-                        @if ($options['footer_signatory'] !== '')
-                            <div class="paper-footer">{{ $options['footer_signatory'] }}</div>
+                        @if (! empty($floorPlanQr) || $options['footer_signatory'] !== '')
+                            <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; flex-wrap: wrap;">
+                                <div>
+                                    @if (! empty($floorPlanQr))
+                                        <div style="display: inline-flex; align-items: center; gap: 8px; border: 1px solid #334155; background: #f8fafc; padding: 5px 8px; border-radius: 3px;">
+                                            <img src="{{ $floorPlanQr['qr_data_uri'] }}" alt="QR Denah Duduk Digital" style="width: 48px; height: 48px; display: block;">
+                                            <div style="line-height: 1.3; text-align: left;">
+                                                <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: #000;">QR Denah Duduk Digital</div>
+                                                <div style="font-size: 9px; color: #1e293b;">Pindai untuk cek posisi kursi &amp; peserta tiap ruang</div>
+                                                <div style="font-size: 8.5px; color: #475569;">{{ $floorPlanQr['version_label'] }}</div>
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
+                                @if ($options['footer_signatory'] !== '')
+                                    <div class="paper-footer" style="margin-top: 0;">{{ $options['footer_signatory'] }}</div>
+                                @endif
+                            </div>
                         @endif
                         <div class="paper-system-footer">
-                            Jadwal Pelajaran di cetak oleh Apps-Automated Examination Document System
+                            *Dokumen ini di cetak secara otomatis Apps-Automated Examination Document System
                         </div>
                     </div>
                 </div>

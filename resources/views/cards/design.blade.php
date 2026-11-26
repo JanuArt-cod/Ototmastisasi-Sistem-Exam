@@ -5,13 +5,29 @@
 @section('content')
     @include('cards.partials._card-styles', ['layout' => $layout])
 
+    @php
+        $sideMode = old('card_side_mode', $layout['card_side_mode']);
+        $isDoubleSided = $sideMode === 'double_sided';
+        $paperSize = old('print_paper_size', $layout['print_paper_size']);
+        $curW = (float) old('card_width_mm', $layout['card_width_mm']);
+        $curH = (float) old('card_height_mm', $layout['card_height_mm']);
+        $isB3Size = ($curW >= 102.0 && $curW <= 106.0 && $curH >= 73.0 && $curH <= 76.0);
+    @endphp
+
     <section class="card">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
             <div>
-                <span class="badge badge-info" style="margin-bottom: 6px;">Langkah 4 &amp; 5 &bull; Desain Kartu &amp; Halaman Cetak</span>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px;">
+                    <span class="badge badge-info">Langkah 4 &amp; 5 &bull; Desain Kartu &amp; Halaman Cetak</span>
+                    @if ($isB3Size)
+                        <span class="badge badge-success">Standar Plastik B3 ({{ number_format($curW, 0) }} &times; {{ number_format($curH, 0) }} mm) Aktif</span>
+                    @else
+                        <span class="badge badge-warning">Ukuran Saat Ini: {{ number_format($curW, 0) }} &times; {{ number_format($curH, 0) }} mm (Bukan B3)</span>
+                    @endif
+                </div>
                 <h1 class="card-title" style="font-size: 20px;">{{ $session->session_name }}</h1>
                 <p class="card-desc" style="margin-bottom: 0;">
-                    Atur ukuran fisik kartu (mm), elemen sisi depan dan sisi belakang, serta susunan lembar cetak sebelum ekspor PDF.
+                    Atur ukuran fisik kartu untuk <strong>Plastik ID Card B3</strong>, elemen sisi depan &amp; jadwal ujian, serta susunan lembar cetak PDF.
                 </p>
             </div>
             <div class="actions-group">
@@ -19,7 +35,7 @@
                     Jadwal Ujian ({{ $schedules->count() }} Mapel)
                 </a>
                 <a href="{{ route('exam-sessions.export.index', $session) }}" class="btn btn-primary">
-                    Lanjut ke Ekspor PDF
+                    Lanjut ke Halaman Cetak PDF
                 </a>
                 <a href="{{ route('exam-sessions.show', $session) }}" class="btn btn-secondary">
                     Kembali ke Sesi
@@ -34,48 +50,50 @@
         </div>
     @endif
 
-    @php
-        $sideMode = old('card_side_mode', $layout['card_side_mode']);
-        $isDoubleSided = $sideMode === 'double_sided';
-        $paperSize = old('print_paper_size', $layout['print_paper_size']);
-    @endphp
-
-    <form action="{{ route('exam-sessions.design.update', $session) }}" method="POST">
+    <form id="card-design-form" action="{{ route('exam-sessions.design.update', $session) }}" method="POST">
         @csrf
         @method('PUT')
 
-        {{-- BAGIAN 1: PILIHAN MODE KARTU (1 SISI VS 2 SISI) & UKURAN FISIK --}}
+        {{-- BAGIAN 1: PILIHAN MODE KARTU & UKURAN FISIK PLASTIK B3 --}}
         <section class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; margin-bottom: 12px;">
                 <div>
-                    <h2 class="card-title" style="margin-bottom: 2px;">1. Mode Kartu &amp; Dimensi Fisik (Milimeter)</h2>
+                    <h2 class="card-title" style="margin-bottom: 2px;">1. Mode Kartu &amp; Dimensi Fisik Plastik B3 (Milimeter)</h2>
                     <p class="card-desc" style="margin-bottom: 0;">
-                        Pilih mode kartu 1 sisi standar atau kartu 2 sisi berpasangan (kiri identitas peserta, kanan jadwal ujian).
+                        Pilih preset <strong>F4 Portrait (3 Pasang B3 / halaman)</strong> atau <strong>A4 Landscape (2 Pasang B3 / halaman)</strong> sesuai kertas yang digunakan.
                     </p>
                 </div>
 
-                <button type="button" class="btn btn-secondary btn-sm" onclick="applyReferenceA4Preset()">
-                    Terapkan Preset A4 2 Sisi (5 Pasang / Halaman: 92 &times; 52 mm)
-                </button>
+                <div class="actions-group" style="gap: 8px; flex-wrap: wrap;">
+                    <button type="button" class="btn btn-primary btn-sm" onclick="applyB3F4PortraitPreset()">
+                        Preset F4 Portrait &bull; 3 Pasang B3 (103 &times; 75 mm)
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="applyB3DoubleSidedPreset()">
+                        Preset A4 Landscape &bull; 2 Pasang B3 (105 &times; 75 mm)
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="applyB3SingleSidedPreset()">
+                        Preset B3 1 Sisi (105 &times; 75 mm)
+                    </button>
+                </div>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
-                <label style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px 12px; cursor: pointer; display: flex; align-items: flex-start; gap: 10px; background: {{ ! $isDoubleSided ? '#eff6ff' : '#ffffff' }};">
-                    <input type="radio" name="card_side_mode" value="single" {{ ! $isDoubleSided ? 'checked' : '' }} style="margin-top: 3px;">
+                <label style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px 12px; cursor: pointer; display: flex; align-items: flex-start; gap: 10px; background: {{ $isDoubleSided ? '#eff6ff' : '#ffffff' }};">
+                    <input type="radio" name="card_side_mode" value="double_sided" {{ $isDoubleSided ? 'checked' : '' }} style="margin-top: 3px;">
                     <div>
-                        <div style="font-weight: 700; font-size: 13px;">Kartu 1 Sisi (Mode Standar)</div>
+                        <div style="font-weight: 700; font-size: 13px;">Kartu 2 Sisi Berdampingan &mdash; Rekomendasi Plastik B3</div>
                         <div style="font-size: 12px; color: var(--text-secondary);">
-                            Satu kartu identitas peserta per slot tanpa sisi belakang jadwal.
+                            Kiri sisi depan (identitas peserta), kanan sisi belakang (jadwal ujian). Tinggal potong dan lipat masuk ke Plastik B3.
                         </div>
                     </div>
                 </label>
 
-                <label style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px 12px; cursor: pointer; display: flex; align-items: flex-start; gap: 10px; background: {{ $isDoubleSided ? '#eff6ff' : '#ffffff' }};">
-                    <input type="radio" name="card_side_mode" value="double_sided" {{ $isDoubleSided ? 'checked' : '' }} style="margin-top: 3px;">
+                <label style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 10px 12px; cursor: pointer; display: flex; align-items: flex-start; gap: 10px; background: {{ ! $isDoubleSided ? '#eff6ff' : '#ffffff' }};">
+                    <input type="radio" name="card_side_mode" value="single" {{ ! $isDoubleSided ? 'checked' : '' }} style="margin-top: 3px;">
                     <div>
-                        <div style="font-weight: 700; font-size: 13px;">Kartu 2 Sisi Berdampingan (Front &amp; Back)</div>
+                        <div style="font-weight: 700; font-size: 13px;">Kartu 1 Sisi (Identitas Peserta Saja)</div>
                         <div style="font-size: 12px; color: var(--text-secondary);">
-                            Kolom kiri sisi depan (identitas), kolom kanan sisi belakang (jadwal ujian) dalam satu baris pasangan.
+                            Satu kartu identitas peserta per slot tanpa sisi belakang jadwal ujian.
                         </div>
                     </div>
                 </label>
@@ -96,6 +114,7 @@
                         value="{{ old('card_width_mm', $layout['card_width_mm']) }}"
                         required
                     >
+                    <span style="font-size: 11px; color: var(--text-secondary);">F4: 103 mm &bull; A4: 105 mm</span>
                 </div>
 
                 <div>
@@ -112,6 +131,7 @@
                         value="{{ old('card_height_mm', $layout['card_height_mm']) }}"
                         required
                     >
+                    <span style="font-size: 11px; color: var(--text-secondary);">Standar B3: 75 mm</span>
                 </div>
 
                 <div>
@@ -152,7 +172,7 @@
                 <div>
                     <h2 class="card-title" style="margin-bottom: 2px;">2. Pengaturan Elemen Sisi Depan &amp; Sisi Belakang</h2>
                     <p class="card-desc" style="margin-bottom: 0;">
-                        Pilih komponen yang ditampilkan pada masing-masing sisi kartu.
+                        Pilih komponen yang ditampilkan pada kartu peserta (depan) dan jadwal ujian (belakang).
                     </p>
                 </div>
 
@@ -259,12 +279,12 @@
 
                     <div>
                         <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px;">Lebar Foto (mm)</label>
-                        <input type="number" step="0.5" min="10" max="60" name="photo_width_mm" class="input-text" style="min-width: 100%; width: 100%;" value="{{ old('photo_width_mm', $layout['photo_width_mm']) }}">
+                        <input type="number" step="0.5" min="10" max="60" id="photo_width_mm" name="photo_width_mm" class="input-text" style="min-width: 100%; width: 100%;" value="{{ old('photo_width_mm', $layout['photo_width_mm']) }}">
                     </div>
 
                     <div>
                         <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px;">Tinggi Foto (mm)</label>
-                        <input type="number" step="0.5" min="10" max="80" name="photo_height_mm" class="input-text" style="min-width: 100%; width: 100%;" value="{{ old('photo_height_mm', $layout['photo_height_mm']) }}">
+                        <input type="number" step="0.5" min="10" max="80" id="photo_height_mm" name="photo_height_mm" class="input-text" style="min-width: 100%; width: 100%;" value="{{ old('photo_height_mm', $layout['photo_height_mm']) }}">
                     </div>
                 </div>
             </div>
@@ -296,6 +316,7 @@
                             step="0.2"
                             min="4.5"
                             max="11"
+                            id="schedule_font_size_pt"
                             name="schedule_font_size_pt"
                             class="input-text"
                             style="min-width: 100%; width: 100%;"
@@ -307,9 +328,9 @@
 
                 <div style="margin-top: 12px; font-size: 12.5px; color: var(--text-secondary);">
                     Total baris jadwal saat ini: <strong>{{ $schedules->count() }} mata pelajaran</strong>.
-                    @if ($schedules->count() > 14)
+                    @if ($schedules->count() > 18)
                         <span style="color: #b45309; font-weight: 600;">
-                            Catatan: Jadwal memuat lebih dari 14 baris; perkecil Ukuran Teks Jadwal (misalnya 5.5 - 6.0 pt) atau tambah tinggi kartu jika bagian bawah tabel tampak terpotong pada pratinjau.
+                            Catatan: Jadwal memuat lebih dari 18 baris; perkecil Ukuran Teks Jadwal (misalnya 5.8 - 6.2 pt) atau tambah tinggi kartu jika bagian bawah tabel tampak terpotong pada pratinjau.
                         </span>
                     @endif
                     <a href="{{ route('exam-sessions.schedules.index', $session) }}" style="margin-left: 6px; font-weight: 600;">
@@ -323,15 +344,15 @@
         <section class="card">
             <h2 class="card-title">3. Pengaturan Halaman Cetak &amp; Garis Potong</h2>
             <p class="card-desc">
-                Atur ukuran kertas, orientasi, margin, jarak antar kartu, dan garis potong putus-putus.
+                Pada kertas <strong>F4 Portrait (215 &times; 330 mm)</strong>, gunakan lebar kartu <strong>103 &times; 75 mm</strong> dengan margin kiri/kanan <strong>4 mm</strong> dan jarak lipat <strong>1 mm</strong> agar muat <strong>3 pasang kartu B3 per halaman</strong> secara presisi.
             </p>
 
             <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 12px;">
                 <div>
                     <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px;">Ukuran Kertas</label>
                     <select id="print_paper_size" name="print_paper_size" class="input-text" style="min-width: 100%; width: 100%;" onchange="toggleCustomPaper()">
-                        <option value="A4" {{ $paperSize === 'A4' ? 'selected' : '' }}>A4 (210 &times; 297 mm)</option>
                         <option value="F4" {{ $paperSize === 'F4' ? 'selected' : '' }}>F4 / Folio (215 &times; 330 mm)</option>
+                        <option value="A4" {{ $paperSize === 'A4' ? 'selected' : '' }}>A4 (210 &times; 297 mm)</option>
                         <option value="Letter" {{ $paperSize === 'Letter' ? 'selected' : '' }}>Letter (215.9 &times; 279.4 mm)</option>
                         <option value="Custom" {{ $paperSize === 'Custom' ? 'selected' : '' }}>Custom (Ukuran Sendiri)</option>
                     </select>
@@ -362,11 +383,11 @@
             <div id="box-custom-paper" style="display: {{ $paperSize === 'Custom' ? 'grid' : 'none' }}; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
                 <div>
                     <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px;">Lebar Kertas Custom (mm)</label>
-                    <input type="number" step="0.5" min="50" max="1000" name="custom_paper_width_mm" class="input-text" style="min-width: 100%; width: 100%;" value="{{ old('custom_paper_width_mm', $layout['custom_paper_width_mm'] ?? 210) }}">
+                    <input type="number" step="0.5" min="50" max="1000" name="custom_paper_width_mm" class="input-text" style="min-width: 100%; width: 100%;" value="{{ old('custom_paper_width_mm', $layout['custom_paper_width_mm'] ?? 215) }}">
                 </div>
                 <div>
                     <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px;">Tinggi Kertas Custom (mm)</label>
-                    <input type="number" step="0.5" min="50" max="1000" name="custom_paper_height_mm" class="input-text" style="min-width: 100%; width: 100%;" value="{{ old('custom_paper_height_mm', $layout['custom_paper_height_mm'] ?? 297) }}">
+                    <input type="number" step="0.5" min="50" max="1000" name="custom_paper_height_mm" class="input-text" style="min-width: 100%; width: 100%;" value="{{ old('custom_paper_height_mm', $layout['custom_paper_height_mm'] ?? 330) }}">
                 </div>
             </div>
 
@@ -388,11 +409,11 @@
                     <input type="number" step="0.5" min="0" max="80" id="margin_left_mm" name="margin_left_mm" class="input-text" style="min-width: 100%; width: 100%;" value="{{ old('margin_left_mm', $layout['margin_left_mm']) }}">
                 </div>
                 <div>
-                    <label style="display: block; font-size: 11.5px; font-weight: 600; margin-bottom: 4px;">Jarak Horizontal (mm)</label>
+                    <label style="display: block; font-size: 11.5px; font-weight: 600; margin-bottom: 4px;">Jarak Lipat / Tengah (mm)</label>
                     <input type="number" step="0.5" min="0" max="40" id="gap_x_mm" name="gap_x_mm" class="input-text" style="min-width: 100%; width: 100%;" value="{{ old('gap_x_mm', $layout['gap_x_mm']) }}">
                 </div>
                 <div>
-                    <label style="display: block; font-size: 11.5px; font-weight: 600; margin-bottom: 4px;">Jarak Vertikal (mm)</label>
+                    <label style="display: block; font-size: 11.5px; font-weight: 600; margin-bottom: 4px;">Jarak Antar Baris (mm)</label>
                     <input type="number" step="0.5" min="0" max="40" id="gap_y_mm" name="gap_y_mm" class="input-text" style="min-width: 100%; width: 100%;" value="{{ old('gap_y_mm', $layout['gap_y_mm']) }}">
                 </div>
             </div>
@@ -400,7 +421,7 @@
             <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; border-top: 1px solid #e2e8f0; padding-top: 12px;">
                 <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; cursor: pointer;">
                     <input type="checkbox" name="show_cut_lines" value="1" {{ old('show_cut_lines', $layout['show_cut_lines']) ? 'checked' : '' }}>
-                    <span>Tampilkan Garis Potong Putus-Putus di Lembar Cetak</span>
+                    <span>Tampilkan Garis Potong &amp; Garis Lipat Putus-Putus di Lembar Cetak</span>
                 </label>
 
                 <button type="submit" class="btn btn-primary">
@@ -416,7 +437,8 @@
             <div>
                 <h2 class="card-title" style="margin-bottom: 2px;">4. Pratinjau Desain &amp; Lembar Cetak</h2>
                 <p class="card-desc" style="margin-bottom: 0;">
-                    Menampilkan simulasi siswa: <strong>{{ $previewStudent->student_name }}</strong> ({{ $previewStudent->class_name }}).
+                    Simulasi siswa: <strong>{{ $previewStudent->student_name }}</strong> ({{ $previewStudent->class_name }}) &bull;
+                    Ukuran 1 sisi: <strong>{{ number_format($layout['card_width_mm'], 1) }} &times; {{ number_format($layout['card_height_mm'], 1) }} mm</strong>.
                     @if ($metrics)
                         Kapasitas cetak: <strong>{{ $metrics['cards_per_page'] }} {{ $metrics['is_double_sided'] ? 'pasangan kartu' : 'kartu' }} / halaman</strong>.
                     @endif
@@ -440,12 +462,10 @@
         </div>
 
         @if ($layout['card_side_mode'] === 'double_sided')
-            {{-- 4 AREA PRATINJAU KARTU DUA SISI --}}
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px;">
-                {{-- 1. Preview Front Side --}}
                 <div style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; padding: 14px;">
                     <div style="font-size: 12px; font-weight: 700; color: #0f172a; margin-bottom: 10px;">
-                        1. Preview Front Side (Sisi Depan &mdash; Identitas Peserta)
+                        1. Preview Sisi Depan &mdash; Kartu Peserta ({{ number_format($layout['card_width_mm'], 0) }} &times; {{ number_format($layout['card_height_mm'], 0) }} mm)
                     </div>
                     <div style="overflow-x: auto; display: flex; justify-content: center; padding: 8px 0;">
                         @include('cards.partials._front-card', [
@@ -459,10 +479,9 @@
                     </div>
                 </div>
 
-                {{-- 2. Preview Back Side --}}
                 <div style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; padding: 14px;">
                     <div style="font-size: 12px; font-weight: 700; color: #0f172a; margin-bottom: 10px;">
-                        2. Preview Back Side (Sisi Belakang &mdash; Jadwal Ujian)
+                        2. Preview Sisi Belakang &mdash; Jadwal Ujian ({{ number_format($layout['card_width_mm'], 0) }} &times; {{ number_format($layout['card_height_mm'], 0) }} mm)
                     </div>
                     <div style="overflow-x: auto; display: flex; justify-content: center; padding: 8px 0;">
                         @include('cards.partials._back-card', [
@@ -474,10 +493,9 @@
                 </div>
             </div>
 
-            {{-- 3. Preview Pasangan Kartu Berdampingan --}}
             <div style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; padding: 14px; margin-bottom: 18px;">
                 <div style="font-size: 12px; font-weight: 700; color: #0f172a; margin-bottom: 10px;">
-                    3. Preview Pasangan Kartu Berdampingan (Kiri: Depan &bull; Kanan: Belakang)
+                    3. Preview Pasangan Kartu Berdampingan (Kiri: Depan &bull; Garis Lipat Tengah &bull; Kanan: Belakang)
                 </div>
                 <div style="overflow-x: auto; padding: 8px 0;">
                     <table class="ds-pair-table">
@@ -492,7 +510,7 @@
                                     'stampUrl' => $stampUrl,
                                 ])
                             </td>
-                            <td class="ds-pair-gap"></td>
+                            <td class="ds-pair-gap" style="{{ $layout['show_cut_lines'] ? 'border-left: 0.25mm dashed #94a3b8;' : '' }}"></td>
                             <td class="ds-pair-cell">
                                 @include('cards.partials._back-card', [
                                     'session' => $session,
@@ -505,7 +523,6 @@
                 </div>
             </div>
 
-            {{-- 4. Preview Lembar Cetak --}}
             @if ($metrics)
                 <div style="background: #cbd5e1; border: 1px solid #94a3b8; border-radius: 6px; padding: 16px;">
                     <div style="font-size: 12px; font-weight: 700; color: #0f172a; margin-bottom: 10px;">
@@ -514,7 +531,7 @@
                     <div style="overflow-x: auto; padding: 8px 0;">
                         <div style="width: {{ $metrics['paper_width_mm'] }}mm; min-height: {{ $metrics['paper_height_mm'] }}mm; background: #ffffff; margin: 0 auto; padding: {{ $layout['margin_top_mm'] }}mm {{ $layout['margin_right_mm'] }}mm {{ $layout['margin_bottom_mm'] }}mm {{ $layout['margin_left_mm'] }}mm; box-sizing: border-box; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.18);">
                             @for ($r = 0; $r < $metrics['rows']; $r++)
-                                <div style="{{ $r < ($metrics['rows'] - 1) ? 'margin-bottom: ' . $layout['gap_y_mm'] . 'mm;' : '' }} {{ $layout['show_cut_lines'] ? 'border-bottom: 0.25mm dashed #94a3b8; padding-bottom: ' . ($layout['gap_y_mm'] / 2) . 'mm;' : '' }}">
+                                <div style="{{ $r < ($metrics['rows'] - 1) ? 'margin-bottom: ' . ($layout['gap_y_mm'] / 2) . 'mm; padding-bottom: ' . ($layout['gap_y_mm'] / 2) . 'mm;' : '' }} {{ ($layout['show_cut_lines'] && $r < ($metrics['rows'] - 1)) ? 'border-bottom: 0.25mm dashed #94a3b8;' : '' }}">
                                     <table class="ds-pair-table">
                                         <tr>
                                             @for ($c = 0; $c < $metrics['columns']; $c++)
@@ -549,7 +566,6 @@
                 </div>
             @endif
         @else
-            {{-- PRATINJAU MODE 1 SISI STANDAR --}}
             @php
                 $singleAssets = [
                     'logo_src' => $logoUrl,
@@ -559,7 +575,9 @@
             @endphp
 
             <div style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; padding: 14px; margin-bottom: 16px;">
-                <div style="font-size: 12px; font-weight: 700; margin-bottom: 10px;">1. Pratinjau Kartu Tunggal (1 Sisi)</div>
+                <div style="font-size: 12px; font-weight: 700; margin-bottom: 10px;">
+                    1. Pratinjau Kartu Tunggal (1 Sisi &mdash; {{ number_format($layout['card_width_mm'], 0) }} &times; {{ number_format($layout['card_height_mm'], 0) }} mm)
+                </div>
                 <div style="overflow-x: auto; display: flex; justify-content: center; padding: 8px 0;">
                     @include('cards.partials._single-card', [
                         'session' => $session,
@@ -625,23 +643,72 @@
             document.getElementById('box-custom-paper').style.display = size === 'Custom' ? 'grid' : 'none';
         }
 
-        function applyReferenceA4Preset() {
+        function applyB3F4PortraitPreset() {
             const doubleRadio = document.querySelector('input[name="card_side_mode"][value="double_sided"]');
             if (doubleRadio) doubleRadio.checked = true;
 
-            document.getElementById('card_width_mm').value = '92';
-            document.getElementById('card_height_mm').value = '52';
-            document.getElementById('print_paper_size').value = 'A4';
+            document.getElementById('card_width_mm').value = '103';
+            document.getElementById('card_height_mm').value = '75';
+            document.getElementById('photo_width_mm').value = '20';
+            document.getElementById('photo_height_mm').value = '26';
+            document.getElementById('schedule_font_size_pt').value = '6.8';
+            document.getElementById('print_paper_size').value = 'F4';
             document.getElementById('print_orientation').value = 'portrait';
+            document.getElementById('margin_top_mm').value = '12';
+            document.getElementById('margin_right_mm').value = '4';
+            document.getElementById('margin_bottom_mm').value = '12';
+            document.getElementById('margin_left_mm').value = '4';
+            document.getElementById('gap_x_mm').value = '1';
+            document.getElementById('gap_y_mm').value = '12';
+            document.getElementById('cards_per_row').value = '1';
+            document.getElementById('cards_per_column').value = '3';
+            toggleCustomPaper();
+            document.getElementById('card-design-form').submit();
+        }
+
+        function applyB3DoubleSidedPreset() {
+            const doubleRadio = document.querySelector('input[name="card_side_mode"][value="double_sided"]');
+            if (doubleRadio) doubleRadio.checked = true;
+
+            document.getElementById('card_width_mm').value = '105';
+            document.getElementById('card_height_mm').value = '75';
+            document.getElementById('photo_width_mm').value = '20';
+            document.getElementById('photo_height_mm').value = '26';
+            document.getElementById('schedule_font_size_pt').value = '6.8';
+            document.getElementById('print_paper_size').value = 'A4';
+            document.getElementById('print_orientation').value = 'landscape';
             document.getElementById('margin_top_mm').value = '10';
             document.getElementById('margin_right_mm').value = '10';
             document.getElementById('margin_bottom_mm').value = '10';
             document.getElementById('margin_left_mm').value = '10';
-            document.getElementById('gap_x_mm').value = '4';
-            document.getElementById('gap_y_mm').value = '3';
-            document.getElementById('cards_per_row').value = '1';
-            document.getElementById('cards_per_column').value = '5';
+            document.getElementById('gap_x_mm').value = '2';
+            document.getElementById('gap_y_mm').value = '6';
+            document.getElementById('cards_per_row').value = '0';
+            document.getElementById('cards_per_column').value = '0';
             toggleCustomPaper();
+            document.getElementById('card-design-form').submit();
+        }
+
+        function applyB3SingleSidedPreset() {
+            const singleRadio = document.querySelector('input[name="card_side_mode"][value="single"]');
+            if (singleRadio) singleRadio.checked = true;
+
+            document.getElementById('card_width_mm').value = '105';
+            document.getElementById('card_height_mm').value = '75';
+            document.getElementById('photo_width_mm').value = '20';
+            document.getElementById('photo_height_mm').value = '26';
+            document.getElementById('print_paper_size').value = 'A4';
+            document.getElementById('print_orientation').value = 'landscape';
+            document.getElementById('margin_top_mm').value = '10';
+            document.getElementById('margin_right_mm').value = '10';
+            document.getElementById('margin_bottom_mm').value = '10';
+            document.getElementById('margin_left_mm').value = '10';
+            document.getElementById('gap_x_mm').value = '8';
+            document.getElementById('gap_y_mm').value = '8';
+            document.getElementById('cards_per_row').value = '0';
+            document.getElementById('cards_per_column').value = '0';
+            toggleCustomPaper();
+            document.getElementById('card-design-form').submit();
         }
     </script>
 @endsection

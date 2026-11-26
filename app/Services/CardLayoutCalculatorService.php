@@ -103,6 +103,8 @@ class CardLayoutCalculatorService
             'paper_height_mm' => $paperHeight,
             'printable_width_mm' => $printableWidth,
             'printable_height_mm' => $printableHeight,
+            'usable_width_mm' => $printableWidth,
+            'usable_height_mm' => $printableHeight,
             'margin_top_mm' => $marginTop,
             'margin_right_mm' => $marginRight,
             'margin_bottom_mm' => $marginBottom,

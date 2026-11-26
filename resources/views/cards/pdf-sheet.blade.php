@@ -19,7 +19,7 @@
 
         table.sheet-grid {
             border-collapse: collapse;
-            margin: 0;
+            margin: 0 auto;
             padding: 0;
         }
 

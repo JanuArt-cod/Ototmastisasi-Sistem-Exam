@@ -100,6 +100,7 @@ class ScheduleShareTest extends TestCase
         $response->assertRedirect(route('exam-sessions.schedules.share.index', $session));
         $response->assertSessionHas('error');
     }
+
     public function test_share_ui_page_and_navigation_links_render_properly(): void
     {
         Storage::fake('local');
@@ -119,5 +120,30 @@ class ScheduleShareTest extends TestCase
         $scheduleIndex = $this->get(route('exam-sessions.schedules.index', $session));
         $scheduleIndex->assertStatus(200);
         $scheduleIndex->assertSee(route('exam-sessions.schedules.share.index', $session));
+    }
+
+    public function test_floor_plan_qr_renders_when_configured_and_omits_cleanly_when_empty(): void
+    {
+        Storage::fake('local');
+        $session = $this->createSessionWithSchedules();
+
+        // 1. Tanpa denah duduk / link QR: halaman tetap aman dan blok QR tidak muncul
+        $pageWithoutQr = $this->get(route('exam-sessions.schedules.share.index', $session));
+        $pageWithoutQr->assertStatus(200);
+        $pageWithoutQr->assertDontSee('QR Denah Duduk Digital');
+
+        // 2. Setelah link denah duduk digital diatur: blok QR & SVG data URI tampil pada pratinjau dan PDF
+        $session->qr_floor_plan_url = 'https://denah-ujian.example.test/sesi-1';
+        $session->save();
+
+        $pageWithQr = $this->get(route('exam-sessions.schedules.share.index', $session));
+        $pageWithQr->assertStatus(200);
+        $pageWithQr->assertSee('QR Denah Duduk Digital');
+        $pageWithQr->assertSee('data:image/svg+xml;base64,', false);
+
+        $pdfWithQr = $this->get(route('exam-sessions.schedules.share.pdf', $session));
+        $pdfWithQr->assertStatus(200);
+        $pdfWithQr->assertHeader('content-type', 'application/pdf');
+        $this->assertStringStartsWith('%PDF-', $pdfWithQr->getContent());
     }
 }

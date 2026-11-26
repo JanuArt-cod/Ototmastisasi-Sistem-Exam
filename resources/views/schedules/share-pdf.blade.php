@@ -10,6 +10,7 @@
         $showProctors = (bool) $options['show_proctor_columns'];
         $isA4 = ($options['paper_size'] ?? 'f4_portrait') === 'a4_portrait';
         $pageCssSize = $isA4 ? 'A4 portrait' : '215mm 330mm';
+        $qrInfo = $floorPlanQr ?? null;
     @endphp
     <style>
         @page {
@@ -127,30 +128,78 @@
             line-height: 1.15;
             padding: 1.1pt 3.5pt !important;
         }
-        .footer-sign {
-            margin-top: 8pt;
+        /* Footer Sejajar: QR Denah Duduk Digital (Kiri) & Panitia / Pengesahan (Kanan) */
+        .footer-align-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 7pt;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        .footer-align-table td {
+            border: none;
+            padding: 0;
+            vertical-align: top;
+        }
+        .footer-qr-cell {
+            width: 60%;
+            text-align: left;
+        }
+        .footer-sign-cell {
+            width: 40%;
             text-align: right;
             font-size: 8.2pt;
             font-weight: bold;
+            padding-top: 1pt;
+        }
+        .qr-footer-box {
+            border-collapse: collapse;
+            border: 0.6pt solid #334155;
+            background-color: #f8fafc;
+        }
+        .qr-footer-box td {
+            border: none;
+            vertical-align: middle;
+        }
+        .qr-img-wrap {
+            padding: 2.5pt;
+            width: 40pt;
+            text-align: center;
+        }
+        .qr-img-wrap img {
+            width: 36pt;
+            height: 36pt;
+            display: block;
+        }
+        .qr-text-wrap {
+            padding: 2.5pt 6pt 2.5pt 2pt;
+            line-height: 1.22;
+        }
+        .qr-title {
+            font-size: 6.8pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #000000;
+        }
+        .qr-desc {
+            font-size: 6pt;
+            color: #1e293b;
+        }
+        .qr-meta {
+            font-size: 5.5pt;
+            color: #475569;
+            margin-top: 1pt;
+        }
+        .system-print-footer {
+            margin-top: 6pt;
+            padding-top: 3.5pt;
+            border-top: 0.5pt dashed #64748b;
+            text-align: left;
+            font-size: 6.8pt;
+            font-style: italic;
+            color: #334155;
             page-break-inside: avoid;
         }
-        .footer-sign {
-         margin-top: 8pt;
-         text-align: right;
-         font-size: 8.2pt;
-         font-weight: bold;
-         page-break-inside: avoid;
-     }
-     .system-print-footer {
-         margin-top: 10pt;
-         padding-top: 4pt;
-         border-top: 0.5pt dashed #64748b;
-         text-align: left;
-         font-size: 6.8pt;
-         font-style: italic;
-         color: #334155;
-         page-break-inside: avoid;
-     }
     </style>
 </head>
 <body>
@@ -312,8 +361,30 @@
         </table>
     @endforeach
 
-    @if ($options['footer_signatory'] !== '')
-        <div class="footer-sign">{{ $options['footer_signatory'] }}</div>
+    @if (! empty($qrInfo) || $options['footer_signatory'] !== '')
+        <table class="footer-align-table">
+            <tr>
+                <td class="footer-qr-cell">
+                    @if (! empty($qrInfo))
+                        <table class="qr-footer-box">
+                            <tr>
+                                <td class="qr-img-wrap">
+                                    <img src="{{ $qrInfo['qr_data_uri'] }}" alt="QR Denah Duduk Digital">
+                                </td>
+                                <td class="qr-text-wrap">
+                                    <div class="qr-title">QR Denah Duduk Digital</div>
+                                    <div class="qr-desc">Pindai untuk cek posisi kursi &amp; peserta tiap ruang ujian</div>
+                                    <div class="qr-meta">{{ $qrInfo['version_label'] }} &bull; {{ \Illuminate\Support\Str::limit($qrInfo['target_url'], 52) }}</div>
+                                </td>
+                            </tr>
+                        </table>
+                    @endif
+                </td>
+                <td class="footer-sign-cell">
+                    {{ $options['footer_signatory'] }}
+                </td>
+            </tr>
+        </table>
     @endif
 
     <div class="system-print-footer">

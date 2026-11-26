@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ExamSession;
+use App\Models\CardSetting;
 use App\Services\CardLayoutCalculatorService;
 use App\Services\CardPdfGeneratorService;
 use Illuminate\Http\RedirectResponse;
@@ -22,7 +23,8 @@ class CardExportController extends Controller
     public function index(ExamSession $examSession): View
     {
         $cardSetting = $examSession->cardSetting()->firstOrCreate(
-            ['exam_session_id' => $examSession->id]
+            ['exam_session_id' => $examSession->id],
+            CardSetting::defaultValues()
         );
         $layout = $cardSetting->toLayoutArray();
 

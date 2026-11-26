@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ExamSession;
+use App\Services\QrCodeService;
 use App\Services\ScheduleShareService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
@@ -14,17 +15,20 @@ use Symfony\Component\HttpFoundation\Response;
 class ScheduleShareController extends Controller
 {
     public function __construct(
-        private readonly ScheduleShareService $shareService
+        private readonly ScheduleShareService $shareService,
+        private readonly QrCodeService $qrCodeService
     ) {
     }
 
     public function index(ExamSession $examSession): View
     {
         $scheduleData = $this->shareService->buildScheduleData($examSession);
+        $floorPlanQr = $this->resolveFloorPlanQr($examSession);
 
         return view('schedules.share', [
             'session' => $examSession,
             'data' => $scheduleData,
+            'floorPlanQr' => $floorPlanQr,
             'paperPresets' => ScheduleShareService::PAPER_PRESETS,
         ]);
     }
@@ -150,7 +154,9 @@ class ScheduleShareController extends Controller
                 ->with('error', 'Jadwal mata pelajaran masih kosong. Tambahkan jadwal terlebih dahulu sebelum mencetak PDF.');
         }
 
+        $floorPlanQr = $this->resolveFloorPlanQr($examSession);
         $paperSize = $scheduleData['options']['paper_size'];
+
         $pdf = Pdf::setOption([
             'dpi' => 96,
             'defaultFont' => 'DejaVu Sans',
@@ -159,6 +165,7 @@ class ScheduleShareController extends Controller
         ])->loadView('schedules.share-pdf', [
             'session' => $examSession,
             'data' => $scheduleData,
+            'floorPlanQr' => $floorPlanQr,
         ]);
 
         if ($paperSize === 'a4_portrait') {
@@ -176,6 +183,48 @@ class ScheduleShareController extends Controller
         }
 
         return $pdf->stream($filename);
+    }
+
+    /**
+     * Menyiapkan QR Code Denah Duduk Digital untuk ditampilkan sejajar footer dokumen.
+     */
+    private function resolveFloorPlanQr(ExamSession $examSession): ?array
+    {
+        $plan = $examSession->seatingPlans()
+            ->where('status', 'finalized')
+            ->first()
+            ?? $examSession->seatingPlans()->first();
+
+        $customUrl = trim((string) ($examSession->qr_floor_plan_url ?? ''));
+        $targetUrl = '';
+
+        if ($customUrl !== '') {
+            $firstRoom = $plan?->assignments()->orderBy('room_number')->first();
+            $roomNum = $firstRoom ? (string) $firstRoom->room_number : '1';
+            $roomName = $firstRoom ? (string) $firstRoom->room_name : 'Ruang 1';
+
+            $targetUrl = str_replace(
+                ['{room}', '{room_slug}', '{room_name}'],
+                [$roomNum, Str::slug($roomName), rawurlencode($roomName)],
+                $customUrl
+            );
+        } elseif ($plan !== null) {
+            $targetUrl = route('exam-sessions.seating.floor-plan', [
+                'examSession' => $examSession->id,
+                'seatingPlan' => $plan->id,
+            ]);
+        }
+
+        if ($targetUrl === '') {
+            return null;
+        }
+
+        return [
+            'qr_data_uri' => $this->qrCodeService->toSvgDataUri($targetUrl, 4),
+            'target_url' => $targetUrl,
+            'version_label' => $plan ? 'Denah v' . $plan->version_number : 'Denah Digital',
+            'is_custom_url' => $customUrl !== '',
+        ];
     }
 
     private function parseRoomsText(string $roomsText): array

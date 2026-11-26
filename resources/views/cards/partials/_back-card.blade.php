@@ -1,8 +1,10 @@
 @php
     $showBackHeader = ($layout['show_back_header'] ?? false) && ! empty($layout['back_header_title']);
+    $cardHeightMm = (float) ($layout['card_height_mm'] ?? 75.0);
     $scheduleCollection = $schedules ?? collect();
     $totalScheduleRows = $scheduleCollection->count();
-    $isDenseSchedule = $totalScheduleRows >= 14;
+    $denseThreshold = $cardHeightMm >= 68.0 ? 18 : 14;
+    $isDenseSchedule = $totalScheduleRows >= $denseThreshold;
 
     $groupedSchedules = $scheduleCollection->groupBy(function ($item) {
         return $item->day_number . '||' . trim((string) $item->day_date_label);

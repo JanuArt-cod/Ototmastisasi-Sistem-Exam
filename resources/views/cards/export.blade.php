@@ -25,6 +25,22 @@
             </div>
         </div>
 
+        @php
+            $expW = (float) $calc['card_width_mm'];
+            $expH = (float) $calc['card_height_mm'];
+            $isB3Export = ($expW >= 102.0 && $expW <= 106.0 && $expH >= 73.0 && $expH <= 76.0);
+            $unitLabel = ($calc['is_double_sided'] ?? false) ? 'Pasang (Depan + Belakang)' : 'Kartu';
+        @endphp
+
+        @if (! $isB3Export)
+            <div class="alert alert-warning" style="margin-top: 14px; margin-bottom: 0;">
+                <strong>Perhatian Ukuran Kartu:</strong> Sesi ini masih menggunakan ukuran <strong>{{ number_format($calc['card_width_mm'], 0) }} &times; {{ number_format($calc['card_height_mm'], 0) }} mm</strong> (bukan standar Plastik B3 105 &times; 75 mm).
+                <a href="{{ route('exam-sessions.design.edit', $session) }}" style="font-weight: 700; text-decoration: underline; margin-left: 6px;">
+                    Klik di sini untuk mengubah ke Standar Plastik B3 (105 &times; 75 mm) &rarr;
+                </a>
+            </div>
+        @endif
+
         <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 18px 0;">
 
         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
@@ -35,17 +51,19 @@
                 </div>
             </div>
 
-            <div style="background: var(--bg-muted); padding: 12px 14px; border-radius: 6px; border: 1px solid #e2e8f0;">
-                <div style="font-size: 12px; color: var(--text-secondary);">Ukuran Kartu &amp; Kertas</div>
-                <div style="font-size: 18px; font-weight: 700; margin-top: 2px;">
+            <div style="background: {{ $isB3Export ? 'var(--success-bg)' : 'var(--bg-muted)' }}; padding: 12px 14px; border-radius: 6px; border: 1px solid {{ $isB3Export ? 'var(--success-border)' : '#e2e8f0' }};">
+                <div style="font-size: 12px; color: {{ $isB3Export ? 'var(--success-text)' : 'var(--text-secondary)' }};">
+                    Ukuran Kartu {{ $isB3Export ? '(Plastik B3)' : '' }} &amp; Kertas
+                </div>
+                <div style="font-size: 17px; font-weight: 700; color: {{ $isB3Export ? 'var(--success-text)' : 'inherit' }}; margin-top: 2px;">
                     {{ number_format($calc['card_width_mm'], 0) }}&times;{{ number_format($calc['card_height_mm'], 0) }} mm ({{ $calc['paper_size'] }} {{ ucfirst($calc['orientation']) }})
                 </div>
             </div>
 
             <div style="background: var(--success-bg); padding: 12px 14px; border-radius: 6px; border: 1px solid var(--success-border);">
                 <div style="font-size: 12px; color: var(--success-text);">Susunan per Halaman</div>
-                <div style="font-size: 18px; font-weight: 700; color: var(--success-text); margin-top: 2px;">
-                    {{ $calc['columns'] }} &times; {{ $calc['rows'] }} = {{ $calc['cards_per_page'] }} Kartu
+                <div style="font-size: 17px; font-weight: 700; color: var(--success-text); margin-top: 2px;">
+                    {{ $calc['columns'] }} &times; {{ $calc['rows'] }} = {{ $calc['cards_per_page'] }} {{ $unitLabel }}
                 </div>
             </div>
 
@@ -60,11 +78,11 @@
 
     {{-- PETUNJUK CETAK UKURAN ASLI 100% --}}
     <section class="card" style="background: #fffbeb; border-color: #fde68a;">
-        <h2 class="card-title" style="color: #92400e; margin-bottom: 6px;">Petunjuk Penting Sebelum Mencetak ke Kertas (Ukuran Asli 100%)</h2>
+        <h2 class="card-title" style="color: #92400e; margin-bottom: 6px;">Petunjuk Penting Sebelum Mencetak ke Kertas (Ukuran Asli 100% &amp; Plastik B3)</h2>
         <ul style="margin: 0; padding-left: 20px; color: #78350f; line-height: 1.65;">
-            <li><strong>Cetak 1 Halaman Uji Coba Terlebih Dahulu:</strong> Gunakan tombol <em>Unduh Sampel 1 Halaman Pertama</em>, cetak pada kertas asli, lalu ukur panjang dan lebar kartu menggunakan penggaris.</li>
-            <li><strong>Wajib Pilih Skala 100% / Actual Size:</strong> Pada dialog cetak PDF (Adobe Acrobat, Chrome, atau Edge), pilih <strong>Actual Size / Ukuran Sebenarnya / Scale 100%</strong>. Jangan gunakan opsi <em>Fit to Page</em> atau <em>Shrink to Printable Area</em> karena akan mengecilkan ukuran milimeter kartu dan menggeser posisi garis potong.</li>
-            <li><strong>Samakan Ukuran Kertas Printer:</strong> Pastikan pengaturan ukuran kertas pada driver printer sudah sesuai dengan pengaturan sesi ini (<strong>{{ $calc['paper_size'] }} {{ ucfirst($calc['orientation']) }}</strong>).</li>
+            <li><strong>Cetak 1 Halaman Uji Coba Terlebih Dahulu:</strong> Gunakan tombol <em>Unduh Sampel 1 Halaman Pertama</em>, cetak pada kertas asli, lalu ukur panjang dan lebar kartu menggunakan penggaris (standar Plastik B3: <strong>105 &times; 75 mm</strong> per sisi).</li>
+            <li><strong>Wajib Pilih Skala 100% / Actual Size:</strong> Pada dialog cetak PDF (Adobe Acrobat, Chrome, atau Edge), pilih <strong>Actual Size / Ukuran Sebenarnya / Scale 100%</strong>. Jangan gunakan opsi <em>Fit to Page</em> atau <em>Shrink to Printable Area</em> karena akan mengecilkan ukuran milimeter kartu sehingga longgar di dalam Plastik B3.</li>
+            <li><strong>Samakan Ukuran Kertas Printer &amp; Cara Lipat:</strong> Atur ukuran kertas driver printer ke <strong>{{ $calc['paper_size'] }} {{ ucfirst($calc['orientation']) }}</strong>. Untuk kartu 2 sisi berpasangan, potong tepi luar kartu (212 &times; 75 mm) lalu lipat tepat pada garis putus-putus tengah agar sisi depan (kartu peserta) dan sisi belakang (jadwal ujian) saling membelakangi di dalam Plastik B3.</li>
         </ul>
     </section>
 
